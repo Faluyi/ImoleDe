@@ -5,7 +5,7 @@ from properties import *
 import string, random
 import requests
 
-uri_web = os.getenv("Db_uri")
+uri_web = os.getenv("DB_URI")
 client = MongoClient(uri_web)
 db = client['ImoleDe_DB']
 Users = db["Users"]

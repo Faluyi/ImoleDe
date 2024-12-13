@@ -88,7 +88,7 @@ def generate_otp():
                             }), 400
 
         otp = pyotp.random_base32()
-        totp = pyotp.TOTP(otp).now()
+        totp = pyotp.TOTP(otp).now()[:4]
 
         expiration_time = datetime.now() + timedelta(minutes=5)
 
