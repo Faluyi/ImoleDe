@@ -5,7 +5,7 @@ from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 from flask_cors import CORS
 from auth import authenticate_user, token_required, admin_required
-import jwt
+import jwt 
 import pyotp
 from properties import *
 from pymongo.errors import DuplicateKeyError
@@ -29,7 +29,7 @@ OTP_db = OTPdb()
 
 app.config['SECRET_KEY'] = "imolede"
 
-@app.post('/api/v1/register')
+@app.post('/api/v1/register/user')
 def register():
     body = request.get_json()
     try:
@@ -47,8 +47,8 @@ def register():
             "state": body["state"],
             "LGA": body["LGA"],
             "address": body["address"],
-            "password": body["password"],
-            "agreed_to_policy": body["agreed_to_policy", False],
+            "password": generate_password_hash(body["password"]),
+            "agreed_to_policy": body.get("agreed_to_policy", False),
             "created": datetime.now(),
         }
         
@@ -202,6 +202,13 @@ def current_user_profile(current_user):
             "status": "failed",
             "message": "Internal server error"
         }, 500
+        
+        
+# @app.post('/api/v1/register/device')
+# @token_required
+# def register_device(current_user):
+    
+    
         
         
         

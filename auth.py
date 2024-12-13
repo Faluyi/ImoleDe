@@ -14,7 +14,7 @@ def authenticate_user(email, pwd):
     
     if user_profile: 
         authenticated = check_password_hash(user_profile["password"], pwd)
-        if authenticated and user_profile["active"]:
+        if authenticated :
             return user_profile
         else:
             return False
@@ -38,7 +38,7 @@ def token_required(f):
                 "error": "Unauthorized"
             }, 401
         try:
-            data=jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+            data= jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
             current_user=User_db.get_user_by_id(data["user_id"])
             if current_user is None:
                 return {
@@ -75,7 +75,7 @@ def admin_required(f):
                 "error": "Unauthorized"
             }, 401
         try:
-            data=jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+            data= jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
             current_user=User_db.get_user_by_id(data["user_id"])
             if current_user is None:
                 return {
@@ -116,7 +116,7 @@ def master_required(f):
                 "error": "Unauthorized"
             }, 401
         try:
-            data=jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+            data= jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
             current_user=User_db.get_user_by_id(data["user_id"])
             if current_user is None:
                 return {
