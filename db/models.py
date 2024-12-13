@@ -37,14 +37,6 @@ class Userdb:
     def get_user_by_id(self, user_id):
         return self.collection.find_one({"_id": ObjectId(user_id)})
     
-    def fs_get_user_by_id(self, user_id, token):
-        url = f"https://app.foodsoldiers.io/api/v1/userdetail/{user_id}"
-        headers = {
-                    'Authorization': f'Bearer {token}',
-                    }
-        
-        response = requests.get(url, headers=headers)
-        return response.json()["data"]
     
     def get_pending_approvals(self):
         return self.collection.find({"status": "pending"}).sort([('_id', -1)])
