@@ -5,8 +5,7 @@ from properties import *
 import string, random
 import requests
 
-uri_local = "mongodb://localhost:27017"
-uri_web = "mongodb+srv://Faluyi:Akindele@cluster0.ozepuyt.mongodb.net/?retryWrites=true&w=majority"
+uri_web = os.getenv("Db_uri")
 client = MongoClient(uri_web)
 db = client['ImoleDe_DB']
 Users = db["Users"]
