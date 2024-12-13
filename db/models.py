@@ -3,7 +3,6 @@ from pymongo.errors import DuplicateKeyError
 from bson.objectid import ObjectId 
 from properties import *
 import string, random
-import requests
 
 uri_web = os.getenv("DB_URI")
 client = MongoClient(uri_web)
