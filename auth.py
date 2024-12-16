@@ -5,12 +5,12 @@ import jwt
 from flask import request, abort
 from flask import current_app
 
-User_db = Userdb()
+Users_db = Usersdb()
 
 
 
 def authenticate_user(email, pwd):
-    user_profile = User_db.get_user_by_email(email)
+    user_profile = Users_db.get_user_by_email(email)
     
     if user_profile: 
         authenticated = check_password_hash(user_profile["password"], pwd)
@@ -39,7 +39,7 @@ def token_required(f):
             }, 401
         try:
             data= jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
-            current_user=User_db.get_user_by_id(data["user_id"])
+            current_user=Users_db.get_user_by_id(data["user_id"])
             if current_user is None:
                 return {
                 "message": "Invalid Authentication token!",
@@ -76,7 +76,7 @@ def admin_required(f):
             }, 401
         try:
             data= jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
-            current_user=User_db.get_user_by_id(data["user_id"])
+            current_user=Users_db.get_user_by_id(data["user_id"])
             if current_user is None:
                 return {
                 "message": "Invalid Authentication token!",
@@ -117,7 +117,7 @@ def master_required(f):
             }, 401
         try:
             data= jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
-            current_user=User_db.get_user_by_id(data["user_id"])
+            current_user=Users_db.get_user_by_id(data["user_id"])
             if current_user is None:
                 return {
                 "message": "Invalid Authentication token!",

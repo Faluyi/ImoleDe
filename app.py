@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, session
 from flask_mail import Mail, Message
-from db.models import *
+from db.models import Usersdb, OTPdb, SolarInvertersdb, Devicesdb, DistributionBoardAndSmartSwitchesdb
 from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 from flask_cors import CORS
@@ -24,8 +24,11 @@ app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
 
 bcrypt = Bcrypt(app)
-Users_db = Userdb()
+Users_db = Usersdb()
 OTP_db = OTPdb()
+Solar_inverters_db = SolarInvertersdb()
+Devices_db = Devicesdb()
+DB_SS_db = DistributionBoardAndSmartSwitchesdb()
 
 app.config['SECRET_KEY'] = "imolede"
 
@@ -41,6 +44,7 @@ def register():
             }, 400
             
         reg_details = {
+            "name": body["name"],
             "imolede_id": body["imolede_id"],
             "email": body["email"],
             "phone": body["phone"],
@@ -49,14 +53,13 @@ def register():
             "address": body["address"],
             "password": generate_password_hash(body["password"]),
             "agreed_to_policy": body.get("agreed_to_policy", False),
-            "created": datetime.now(),
+            "created_at": datetime.now()
         }
         
         user_id = Users_db.create_user(reg_details)
         token = jwt.encode({
                 "user_id": str(user_id),
             }, app.config["SECRET_KEY"], algorithm="HS256")
-        app.logger.info(token)
         return jsonify({"status": "success",
                         "message": "User registered successfully",
                        "data":{
@@ -66,7 +69,7 @@ def register():
     except DuplicateKeyError:
         return {
             "status": "failed",
-            "message": "Email address already in use"
+            "message": "Email address or Imolede ID already in use"
         }, 400
         
     
@@ -75,6 +78,43 @@ def register():
             "status": "failed",
             "message": str(e),
         }), 500
+        
+@app.get('/api/v1/user')
+@token_required
+def update_user_profile(current_user):    
+    try:
+        
+        return {
+            "status": "success",
+            "message": "User profile fecthed successfully",
+            "data": {
+                "user_profile": current_user},
+        }, 200
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500
+        
+@app.patch('/api/v1/user')
+@token_required
+def fetch_user_profile(current_user):    
+    try:
+        body = request.get_json()
+        
+        Users_db.update_user(current_user["_id"], body)
+        
+        return {
+            "status": "success",
+            "message": "User profile updated successfully"
+        }, 200
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500
         
         
 @app.post('/api/v1/otp/generate')
@@ -107,7 +147,6 @@ def generate_otp():
     except Exception as e:
         return jsonify({"status": "failed", "message": str(e)}), 500
 
-# Verify OTP
 @app.post('/api/v1/otp/verify')
 def verify_otp():
     
@@ -169,7 +208,6 @@ def sign_in():
         token = jwt.encode({
             "user_id": str(user_profile["_id"]),
         }, app.config["SECRET_KEY"], algorithm="HS256")
-        app.logger.info(token)
                                                         
         return jsonify({
             "status": "success",
@@ -184,31 +222,204 @@ def sign_in():
             "status": "failed",
             "message": str(e),
         }, 500
-
-@app.get('/api/v1/user')
+        
+        
+@app.post('/api/v1/register/inverter')
 @token_required
-def current_user_profile(current_user):    
+def register_solar_inverter(current_user):
+    
     try:
+        body = request.get_json()
+        
+        registration_details = {
+            "size": body["size"],
+            "maker": body["maker"],
+            "model": body["model"],
+            "number": body["number"],
+            "rating": body["rating"],
+            "battery_type": body["battery_type"],
+            "number_of_batteries": body["number_of_batteries"],
+            "battery_rating": body["battery_rating"],
+            "cc_type": body["cc_type"],
+            "cc_rating": body["cc_rating"],
+            "user_id": current_user["_id"],
+            "imolede_id": current_user["imolede_id"],
+        }
+        
+        Solar_inverters_db.create(registration_details)
         
         return {
             "status": "success",
-            "message": "User profile fecthed successfully",
-            "data": {
-                "user_profile": current_user},
+            "message": "Registration successful"
         }, 200
         
-    except:
+    except Exception as e:
         return {
             "status": "failed",
-            "message": "Internal server error"
+            "message": str(e)
         }, 500
-        
-        
-# @app.post('/api/v1/register/device')
-# @token_required
-# def register_device(current_user):
     
+@app.get('/api/v1/inverter')
+@token_required
+def fetch_inverter(current_user):
     
+    try:
+       
+        inverter = Solar_inverters_db.get_inverter(current_user["imolede_id"])
+        del inverter["_id"]
+        
+        return {
+            "status": "success",
+            "message": "Data fetched successfully",
+            "data": {
+                "inverter": inverter
+            }
+        }, 200
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500
+
+
+@app.post('/api/v1/register/dbss')
+@token_required
+def register_dbss(current_user):
+    
+    try:
+        body = request.get_json()
+        
+        registration_details = {
+            "db_model": body["db_model"],
+            "db_size": body["db_size"],
+            "ss_num": body["ss_num"],
+            "user_id": current_user["_id"],
+            "imolede_id": current_user["imolede_id"],
+        }
+        
+        DB_SS_db.create(registration_details)
+        
+        return {
+            "status": "success",
+            "message": "Registration successful"
+        }, 200
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500
+
+
+@app.get('/api/v1/dbss')
+@token_required
+def fetch_dbss(current_user):
+    
+    try:
+       
+        dbss = DB_SS_db.get_dbss(current_user["imolede_id"])
+        del dbss["_id"]
+        
+        return {
+            "status": "success",
+            "message": "Data fetched successfully",
+            "data": {
+                "dbss": dbss
+            }
+        }, 200
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500
+
+@app.post('/api/v1/register/devices')
+@token_required
+def register_device(current_user):
+    
+    try:
+        body = request.get_json()
+        
+        registration_details = {
+            "1": {
+                "name": body['1']['name'],
+                "state": "off",
+                "wattage": body['1']['wattage']
+            },
+            "2": {
+                "name": body['2']['name'],
+                "state": "off",
+                "wattage": body['2']['wattage']
+            },
+            "3": {
+                "name": body['3']['name'],
+                "state": "off",
+                "wattage": body['3']['wattage']
+            },
+            "4": {
+                "name": body['4']['name'],
+                "state": "off",
+                "wattage": body['4']['wattage']
+            },
+            "user_id": current_user["_id"],
+            "imolede_id": current_user["imolede_id"],
+            "created_at": datetime.now(),
+        }
+        
+        Devices_db.create(registration_details)
+        
+        return {
+            "status": "success",
+            "message": "Registration successful"
+        }, 200
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500
+
+
+@app.patch('/api/v1/device/state')
+@token_required
+def update_device_state(current_user):  
+    try:
+        body = request.get_json()
+        
+        Devices_db.update_device_state(current_user["imolede_id"], body["device"], body["state"])
+        return {
+            "status": "success",
+            "message": "Device state updated successfully"
+        }, 200
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500   
+    
+@app.get('/api/v1/devices')
+@token_required
+def get_user_devices(current_user):
+      
+    try:
+        
+        devices =  Devices_db.get_user_devices(current_user["imolede_id"])
+        del devices["_id"]
+        return {
+            "status": "success",
+            "message": "Data fetched successfully",
+            "data": {
+                "devices": devices
+            }
+        }, 200
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "message": str(e)
+        }, 500
         
         
         
