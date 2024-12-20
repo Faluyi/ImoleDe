@@ -14,7 +14,7 @@ Solar_inverters = db['Solar_inverters']
 DBSS = db['Distribution_board_and_smart_switches']
 Devices = db['Devices']
 Users.create_index([('email', ASCENDING), ], unique=True)
-Users.create_index([('imole_id', ASCENDING), ], unique=True)
+Users.create_index([('imolede_id', ASCENDING), ], unique=True)
 
 class Usersdb:
     def __init__(self) -> None:
